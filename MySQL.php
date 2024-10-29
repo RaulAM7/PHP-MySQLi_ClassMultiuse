@@ -1,8 +1,15 @@
 <?php
 
+require '/var/www/html/Class-PHP-Database2/Class-PHP-DB2/env.php';
+
+$servername = getenv('DB_SERVERNAME');
+$username = getenv('DB_USERNAME');
+$password = getenv('DB_PASSWORD');
+
+
 class MySQL
 {
-    public static function connect($servername, $username, $password, $database)
+    public static function connect($servername, $username, $password, $database='Auxiliar')
     {
         try {
             $new_connect = mysqli_connect($servername, $username, $password, $database);
@@ -13,6 +20,7 @@ class MySQL
             error_log($e->getMessage());
             echo 'Caught exception: ' . $e->getMessage() . PHP_EOL;
         }
+        echo 'Connection established succesfully!'.PHP_EOL;
         return  $new_connect;
     }
     public static function checkConnection($conn)
@@ -91,20 +99,36 @@ class MySQL
         }
         $conn->close();
     }
-    public static function createDatabase($conn, $servername, $username, $password, $databaseName)
+    public static function createDatabase($servername, $username, $password, $databaseName='Auxiliar')
     {
-        $sql = "CREATE DATABASE $databaseName";
+        $conn = MySQL::connect($servername, $username, $password, $databaseName);       
+        
+        if ($databaseName != 'Auxiliar')
+        {
+            $sql = "CREATE DATABASE $databaseName";
 
-        if ($conn->query($sql)) {
+            if ($conn->query($sql) && $databaseName != 'Auxiliar') {
+                echo "NEW DATABASE created sucessfully" . PHP_EOL;
+            } else {
+                echo "NEW ERROR: " . $sql . $conn->error . PHP_EOL;
+            }
+        } else {
+            echo "NEW ERROR: You try to create a database that exists! ". $conn->error.PHP_EOL;
+        }
+        /*
+        if ($conn->query($sql) && $databaseName != 'Auxiliar') {
             echo "NEW DATABASE created sucessfully" . PHP_EOL;
         } else {
             echo "New Error: " . $sql . $conn->error . PHP_EOL;
         }
+        */
         echo "Distroying connection" . PHP_EOL;
         $conn->close();
     }
     public static function createTable($conn, $servername, $username, $password, $databaseName, $tableName)
     {
+        $conn = MySQL::connect($servername, $username, $password, $databaseName);       
+        
         if (self::viewDatabase($conn) == $databaseName) {
             // Falta mejorar la logica del viewDatabase
             $sql = "CREATE TABLE $tableName";
@@ -167,4 +191,3 @@ class MySQL
         $conn->close();
     }
 }
-
